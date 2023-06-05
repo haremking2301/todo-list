@@ -26,10 +26,6 @@ function App() {
               class="todolist-task"
             ></TaskComponent>
             <TaskComponent
-              task="anh mai la vo dich"
-              class="todolist-task"
-            ></TaskComponent>
-            <TaskComponent
               task="Task nay done"
               class="todolist-task todolist-task__name__done"
             ></TaskComponent>
