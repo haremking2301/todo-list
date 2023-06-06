@@ -7,6 +7,7 @@ import TaskComponent from "./components/TaskComponent/task";
 import { useState } from "react";
 
 function App() {
+  const [status, setStatus] = useState("todolist-task");
   const [job, setJob] = useState("");
   const [jobs, setJobs] = useState(
     JSON.parse(localStorage.getItem("todo")) || []
@@ -21,6 +22,7 @@ function App() {
     });
     setJob("");
   };
+
   return (
     <div className="App">
       <div className="todolist-container">
@@ -44,10 +46,16 @@ function App() {
 
           <div className="todolist-main">
             {jobs.map((job, index) => (
-              <TaskComponent key={index} task={job} class="todolist-task" />
+              <TaskComponent
+                key={index}
+                task={job}
+                class={status}
+                setClass={setStatus}
+                data={jobs}
+                dataFunction={setJobs}
+              />
             ))}
           </div>
-
           <div className="todolist-pagination">
             <Pagination defaultCurrent={1} total={50} />;
           </div>
