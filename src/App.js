@@ -12,12 +12,14 @@ function App() {
     JSON.parse(localStorage.getItem("todo")) || []
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     setJobs((prev) => {
       const sw = [...prev, job];
       localStorage.setItem("todo", JSON.stringify(sw));
       return sw;
     });
+    setJob("");
   };
   return (
     <div className="App">
@@ -42,7 +44,7 @@ function App() {
 
           <div className="todolist-main">
             {jobs.map((job, index) => (
-              <TaskComponent key={index} task={job} />
+              <TaskComponent key={index} task={job} class="todolist-task" />
             ))}
           </div>
 
