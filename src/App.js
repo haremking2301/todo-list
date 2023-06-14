@@ -4,24 +4,36 @@ import { Input } from "antd";
 import { PlusCircleTwoTone } from "@ant-design/icons";
 import { Pagination } from "antd";
 import TaskComponent from "./components/TaskComponent/task";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function App() {
-  const [status, setStatus] = useState("todolist-task");
   const [job, setJob] = useState("");
   const [jobs, setJobs] = useState(
     JSON.parse(localStorage.getItem("todo")) || []
   );
+  const [page, setPage] = useState(jobs.slice(0, 5));
+
+  const handle = (data = 1) => {
+    setPage(jobs.slice(0 + (data - 1) * 5, 5 + (data - 1) * 5));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setJobs((prev) => {
-      const sw = [...prev, job];
+      const newjob = {
+        content: job,
+        isDone: false,
+      };
+      const sw = [newjob, ...prev];
       localStorage.setItem("todo", JSON.stringify(sw));
       return sw;
     });
     setJob("");
   };
+
+  useEffect(() => {
+    handle();
+  }, [jobs]);
 
   return (
     <div className="App">
@@ -29,7 +41,7 @@ function App() {
         <div className="todolist-wrapper">
           <div className="todolist-header">
             <h3 className="todolist-header__title">Todo List Application</h3>
-            <form className="todolist-header__form">
+            <form className="todolist-header__form" onSubmit={handleSubmit}>
               <Input
                 value={job}
                 onChange={function (e) {
@@ -39,25 +51,31 @@ function App() {
                 placeholder="Add new task in here"
               />
               <button>
-                <PlusCircleTwoTone onClick={handleSubmit} />
+                <PlusCircleTwoTone type="submit" />
               </button>
             </form>
           </div>
 
           <div className="todolist-main">
-            {jobs.map((job, index) => (
+            {page.map((job, index) => (
               <TaskComponent
                 key={index}
-                task={job}
-                class={status}
-                setClass={setStatus}
+                task={job.content}
+                isDone={job.isDone}
+                id={index}
+                class="todolist-task"
                 data={jobs}
                 dataFunction={setJobs}
               />
             ))}
           </div>
           <div className="todolist-pagination">
-            <Pagination defaultCurrent={1} total={50} />;
+            <Pagination
+              total={jobs.length}
+              defaultPageSize={5}
+              onChange={handle}
+              defaultCurrent={1}
+            />
           </div>
         </div>
       </div>
