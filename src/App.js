@@ -5,12 +5,26 @@ import { PlusCircleTwoTone } from "@ant-design/icons";
 import { Pagination } from "antd";
 import TaskComponent from "./components/TaskComponent/task";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 function App() {
   const [job, setJob] = useState("");
-  const [jobs, setJobs] = useState(
-    JSON.parse(localStorage.getItem("todo")) || []
-  );
+  const [jobs, setJobs] = useState([]);
+
+  useEffect(() => {
+    axios({
+      method: "get",
+      url: "http://localhost:6969/data",
+      responseType: "stream",
+    })
+      .then(function (response) {
+        return JSON.parse(response.data);
+      })
+      .then(function (response) {
+        setJobs(response);
+      });
+  }, []);
+
   const [page, setPage] = useState(jobs.slice(0, 5));
 
   const handle = (data = 1) => {
@@ -19,15 +33,18 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setJobs((prev) => {
-      const newjob = {
-        content: job,
-        isDone: false,
-      };
-      const sw = [newjob, ...prev];
-      localStorage.setItem("todo", JSON.stringify(sw));
-      return sw;
-    });
+    const user = {
+      content: job,
+      isDone: false,
+    };
+    axios
+      .post("http://localhost:6969/data", { user })
+      .then((res) => {
+        console.log(res.data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
     setJob("");
   };
 
