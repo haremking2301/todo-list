@@ -1,56 +1,81 @@
 import "./App.scss";
 import "antd/dist/reset.css";
-import { Input } from "antd";
+import { Input, Spin } from "antd";
 import { PlusCircleTwoTone } from "@ant-design/icons";
 import { Pagination } from "antd";
 import TaskComponent from "./components/TaskComponent/task";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { TasksApi } from "./apis/taskApi";
 
 function App() {
   const [job, setJob] = useState("");
   const [jobs, setJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState({
+    crp: 1,
+    limit: 5,
+    total: 0
+  });
 
-  useEffect(() => {
-    axios({
-      method: "get",
-      url: "http://localhost:6969/data",
-      responseType: "stream",
+  const fetchAllTasks = async (param) => {
+    setIsLoading(true);
+    const dataz = await TasksApi.getAllTasks(param);
+    console.log(dataz.data);
+    setJobs(dataz.data);
+    setPage({
+      ...page,
+      total: dataz.headers["x-total-count"]
     })
-      .then(function (response) {
-        return JSON.parse(response.data);
-      })
-      .then(function (response) {
-        setJobs(response);
-      });
-  }, []);
-
-  const [page, setPage] = useState(jobs.slice(0, 5));
-
-  const handle = (data = 1) => {
-    setPage(jobs.slice(0 + (data - 1) * 5, 5 + (data - 1) * 5));
+    setIsLoading(false);
   };
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    fetchAllTasks({
+      _page: page.crp,
+      _limit: page.limit
+    });
+  }, [page.crp]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const user = {
       content: job,
       isDone: false,
+      id: Math.random(),
+      createAt: new Date().getTime(),
     };
-    axios
-      .post("http://localhost:6969/data", { user })
-      .then((res) => {
-        console.log(res.data);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    await TasksApi.createTask(user);
+    fetchAllTasks({
+      _page: page.crp,
+      _limit: page.limit
+    });
     setJob("");
   };
 
-  useEffect(() => {
-    handle();
-  }, [jobs]);
+  const handle = function (number) {
+    setPage({
+      ...page,
+      crp: number,
+    })
+  }
+
+  const handleDelete = async function(id) {
+    await TasksApi.deleteTask(id);
+    fetchAllTasks({
+      _page: page.crp,
+      _limit: page.limit
+    })
+  }
+
+  const handleCheck = async function(id) {
+    const done = {isDone: true};
+    await TasksApi.doneTask(id, done)
+    fetchAllTasks({
+      _page: page.crp,
+      _limit: page.limit
+    })
+  }
+
 
   return (
     <div className="App">
@@ -74,24 +99,29 @@ function App() {
           </div>
 
           <div className="todolist-main">
-            {page.map((job, index) => (
+            {isLoading ? <Spin /> : <div />}
+            {jobs.map((job, index) => (
               <TaskComponent
                 key={index}
                 task={job.content}
                 isDone={job.isDone}
-                id={index}
+                id={job.id}
                 class="todolist-task"
                 data={jobs}
                 dataFunction={setJobs}
+                check={handleCheck}
+                delete={handleDelete}
               />
             ))}
           </div>
           <div className="todolist-pagination">
             <Pagination
-              total={jobs.length}
-              defaultPageSize={5}
+              total={page.total}
+              defaultPageSize={page.limit}
+              pageSize={page.limit}
               onChange={handle}
-              defaultCurrent={1}
+              defaultCurrent={page.crp}
+              current={page.crp}
             />
           </div>
         </div>
